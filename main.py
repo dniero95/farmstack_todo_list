@@ -25,16 +25,31 @@ def read_root():
 async def get_todos():
     response = await fetch_all_todos()
     return response
-@app.get('/api/todo/{title}')
-async def get_todos():
-    response = await fetch_all_todos()
-    return response
-@app.post('/api/add/todo')
+@app.get('/api/todo/{title}', response_model=Todo)
+async def get_todo_by_title(title):
+    response = await fetch_one_todo(title)
+    if response:
+        return response
+    raise HTTPException(404, f'there is no todo item whit this {title}')
+
+@app.post('/api/add/todo', response_class=Todo)
 async def add_todo(todo:Todo):
-    pass
-@app.put('/api/update/todo/{id}')
-async def update_todo(id, data):
-    pass
-@app.delete('/api/delete/todo/{id}')
-async def delete_todos(id):
-    pass
+    response = await create_todo(todo.dict())
+    if response:
+        return response
+    raise HTTPException(400, 'something went wrong')
+
+@app.put('/api/update/todo/{title}', response_model=Todo)
+async def update_todo(title:str, desc:str):
+    response = await update_todo(title, desc)
+    if response:
+        return response
+    raise HTTPException(404, f'there is no todo item whit this {title}')
+
+
+@app.delete('/api/delete/todo/{title}')
+async def delete_todo(title):
+    response = await remove_todo(title)
+    if response:
+        return 'succesfully deleted todo item!'
+    raise HTTPException(404, f'there is no todo item whit this {title}')
